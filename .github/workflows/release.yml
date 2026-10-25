@@ -1,0 +1,25 @@
+name: Release
+
+# Creates a GitHub release (and tag v<VERSION>) whenever VERSION on main changes to a new number.
+# Notes come from docs/releases/v<VERSION>.md.
+on:
+  push:
+    branches: [main]
+    paths: [VERSION]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create release if missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="v$(tr -d '[:space:]' < VERSION)"
+          if gh release view "$v" >/dev/null 2>&1; then echo "$v exists"; exit 0; fi
+          gh release create "$v" --target "$GITHUB_SHA" --title "PUTAR! $v" --notes-file "docs/releases/$v.md"
